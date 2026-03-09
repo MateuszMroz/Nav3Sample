@@ -1,0 +1,16 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /Users/mateusz/Documents/Projects/Nav3Sample/compose/common/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4000689306323171835.xml:2:13-83
+INJECTED from /Users/mateusz/Documents/Projects/Nav3Sample/compose/common/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4000689306323171835.xml:2:13-83
+	package
+		INJECTED from /Users/mateusz/Documents/Projects/Nav3Sample/compose/common/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4000689306323171835.xml
+	xmlns:android
+		ADDED from /Users/mateusz/Documents/Projects/Nav3Sample/compose/common/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4000689306323171835.xml:2:23-81
+uses-sdk
+INJECTED from /Users/mateusz/Documents/Projects/Nav3Sample/compose/common/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4000689306323171835.xml reason: use-sdk injection requested
+INJECTED from /Users/mateusz/Documents/Projects/Nav3Sample/compose/common/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4000689306323171835.xml
+INJECTED from /Users/mateusz/Documents/Projects/Nav3Sample/compose/common/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4000689306323171835.xml
+	android:targetSdkVersion
+		INJECTED from /Users/mateusz/Documents/Projects/Nav3Sample/compose/common/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4000689306323171835.xml
+	android:minSdkVersion
+		INJECTED from /Users/mateusz/Documents/Projects/Nav3Sample/compose/common/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest4000689306323171835.xml
