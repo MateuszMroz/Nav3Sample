@@ -11,18 +11,17 @@ android {
     defaultConfig {
         minSdk = 28
     }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
     
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
+    }
+    kotlin {
+        jvmToolchain(17)
     }
 }
 
 dependencies {
+    implementation(project(":libraries:viewmodel"))
     implementation(project(":core:domain"))
     implementation(project(":core:navigation"))  // Dostarcza Route, NavRoute, NavKey
     implementation(project(":features:auth"))    // For AuthRepository

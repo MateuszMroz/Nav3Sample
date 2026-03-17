@@ -1,15 +1,14 @@
 package com.mudita.features.auth.presentation
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.mudita.features.auth.domain.AuthRepository
 import com.mudita.libraries.navigation.NavAction
 import com.mudita.libraries.navigation.NavActionsEmitter
+import com.mudita.libraries.viewmodel.intent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 data class RegisterState(
     val email: String = "",
@@ -50,41 +49,37 @@ class RegisterViewModel(
         }
     }
     
-    private fun register() {
-        viewModelScope.launch {
-            val currentState = _state.value
-            
-            if (currentState.password != currentState.confirmPassword) {
-                _state.update { it.copy(error = "Hasła nie są identyczne") }
-                return@launch
-            }
-            
-            _state.update { it.copy(isLoading = true, error = null) }
-            
-            val result = authRepository.register(
-                username = currentState.email,
-                password = currentState.password
-            )
-            
-            result.fold(
-                onSuccess = {
-                    // Navigation będzie obsłużona przez NavRoot
-                },
-                onFailure = {
-                    _state.update { 
-                        it.copy(
-                            isLoading = false,
-                            error = "Rejestracja nie powiodła się"
-                        )
-                    }
-                }
-            )
+    private fun register() = intent {
+        val currentState = _state.value
+
+        if (currentState.password != currentState.confirmPassword) {
+            _state.update { it.copy(error = "Hasła nie są identyczne") }
+            return@intent
         }
+
+        _state.update { it.copy(isLoading = true, error = null) }
+
+        val result = authRepository.register(
+            username = currentState.email,
+            password = currentState.password
+        )
+
+        result.fold(
+            onSuccess = {
+                // Navigation będzie obsłużona przez NavRoot
+            },
+            onFailure = {
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Rejestracja nie powiodła się"
+                    )
+                }
+            }
+        )
     }
     
-    private fun navigateBack() {
-        viewModelScope.launch {
-            emitNavAction(NavAction.NavigateUp)
-        }
+    private fun navigateBack() = intent {
+        emitNavAction(NavAction.NavigateUp)
     }
 }
