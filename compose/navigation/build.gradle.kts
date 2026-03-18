@@ -24,13 +24,11 @@ android {
             )
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+
+    kotlin {
+        jvmToolchain(17)
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
+
     buildFeatures {
         compose = true
     }
@@ -39,10 +37,10 @@ android {
 dependencies {
     // Core navigation - provides Route, NavRoute, NavKey
     api(project(":core:navigation"))
-    
+
     // Compose (provides Flow from coroutines)
     api(libs.androidx.compose.runtime)
-    
+
     // Navigation 3 UI - expose to consumers
     api(libs.androidx.navigation3.ui)
 }
