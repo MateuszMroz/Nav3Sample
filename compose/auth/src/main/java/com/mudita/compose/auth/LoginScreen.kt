@@ -10,27 +10,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mudita.compose.navigation.NavActionsEffect
-import com.mudita.features.auth.domain.AuthManager
-import com.mudita.features.auth.presentation.LoginIntent
+import com.mudita.features.auth.presentation.LoginContract.Effect
+import com.mudita.features.auth.presentation.LoginContract.Intent
 import com.mudita.features.auth.presentation.LoginViewModel
-import com.mudita.libraries.navigation.AppNavigator
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    navigator: AppNavigator,
-    viewModel: LoginViewModel = koinViewModel()
+    viewModel: LoginViewModel = koinViewModel(),
+    onNavigateToDetails: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    
-    NavActionsEffect(
-        actions = viewModel.navActions,
-        navigator = navigator
-    )
-    
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                Effect.NavigateToRegister -> onNavigateToDetails()
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -54,7 +54,7 @@ fun LoginScreen(
             
             OutlinedTextField(
                 value = state.email,
-                onValueChange = { viewModel.handleIntent(LoginIntent.EmailChanged(it)) },
+                onValueChange = { viewModel.handleIntent(Intent.EmailChanged(it)) },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -64,7 +64,7 @@ fun LoginScreen(
             
             OutlinedTextField(
                 value = state.password,
-                onValueChange = { viewModel.handleIntent(LoginIntent.PasswordChanged(it)) },
+                onValueChange = { viewModel.handleIntent(Intent.PasswordChanged(it)) },
                 label = { Text("Hasło") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -83,7 +83,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
             
             Button(
-                onClick = { viewModel.handleIntent(LoginIntent.LoginClicked) },
+                onClick = { viewModel.handleIntent(Intent.LoginClicked) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isLoading
             ) {
@@ -100,7 +100,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(8.dp))
             
             TextButton(
-                onClick = { viewModel.handleIntent(LoginIntent.RegisterClicked) },
+                onClick = { viewModel.handleIntent(Intent.RegisterClicked) },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Nie masz konta? Zarejestruj się")

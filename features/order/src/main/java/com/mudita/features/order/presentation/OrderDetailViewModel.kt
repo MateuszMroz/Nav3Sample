@@ -2,32 +2,38 @@ package com.mudita.features.order.presentation
 
 import androidx.lifecycle.ViewModel
 import com.mudita.core.domain.usecase.GetOrderByIdUseCase
-import com.mudita.libraries.navigation.NavAction.NavigateUp
-import com.mudita.libraries.navigation.NavActionsEmitter
+import com.mudita.features.order.presentation.OrderDetailContract.Effect
+import com.mudita.features.order.presentation.OrderDetailContract.Intent
 import com.mudita.libraries.viewmodel.intent
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 
 /**
  * OrderDetailViewModel - manages order detail state and navigation
- * 
+ *
  * Uses delegation pattern (by NavActionsEmitter()) for clean navigation API
  * ViewModels emit NavActions, UI layer (NavActionsEffect) handles actual navigation
  */
 class OrderDetailViewModel(
     private val getOrderByIdUseCase: GetOrderByIdUseCase
-) : ViewModel(), NavActionsEmitter by NavActionsEmitter() {
-    
-    private val _state = MutableStateFlow(OrderDetailContract.initialState())
+) : ViewModel() {
+
+    private val _state = MutableStateFlow(OrderDetailState())
     val state: StateFlow<OrderDetailState> = _state.asStateFlow()
-    
-    fun handleIntent(intent: OrderDetailIntent) {
+
+    private val _effect = Channel<Effect>(Channel.BUFFERED)
+    val effect: Flow<Effect> = _effect.receiveAsFlow()
+
+    fun handleIntent(intent: Intent) {
         when (intent) {
-            is OrderDetailIntent.LoadOrder -> loadOrder(intent.orderId)
-            is OrderDetailIntent.OnBackClick -> onBackClick()
-            is OrderDetailIntent.OnEditClick -> onEditClick()
+            is Intent.LoadOrder -> loadOrder(intent.orderId)
+            is Intent.OnBackClick -> onBackClick()
+            is Intent.OnEditClick -> onEditClick(intent.orderId)
         }
     }
     
@@ -59,10 +65,10 @@ class OrderDetailViewModel(
     }
     
     private fun onBackClick() = intent {
-        emitNavAction(NavigateUp)
+        _effect.send(Effect.NavigateBack)
     }
-    
-    private fun onEditClick() = intent {
-        // Navigation will be handled in Compose layer
+
+    private fun onEditClick(orderId: String) = intent {
+        _effect.send(Effect.NavigateToEdit(orderId))
     }
 }

@@ -2,53 +2,44 @@ package com.mudita.features.auth.presentation
 
 import androidx.lifecycle.ViewModel
 import com.mudita.features.auth.domain.AuthRepository
-import com.mudita.libraries.navigation.NavAction
-import com.mudita.libraries.navigation.NavActionsEmitter
 import com.mudita.libraries.viewmodel.intent
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
-
-data class RegisterState(
-    val email: String = "",
-    val password: String = "",
-    val confirmPassword: String = "",
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
-
-sealed interface RegisterIntent {
-    data class EmailChanged(val email: String) : RegisterIntent
-    data class PasswordChanged(val password: String) : RegisterIntent
-    data class ConfirmPasswordChanged(val password: String) : RegisterIntent
-    data object RegisterClicked : RegisterIntent
-    data object BackClicked : RegisterIntent
-}
 
 class RegisterViewModel(
     private val authRepository: AuthRepository
-) : ViewModel(), NavActionsEmitter by NavActionsEmitter() {
-    
+) : ViewModel() {
+
     private val _state = MutableStateFlow(RegisterState())
     val state: StateFlow<RegisterState> = _state.asStateFlow()
-    
-    fun handleIntent(intent: RegisterIntent) {
+
+    private val _effect = Channel<RegisterContract.Effect>(Channel.BUFFERED)
+    val effect: Flow<RegisterContract.Effect> = _effect.receiveAsFlow()
+
+    fun handleIntent(intent: RegisterContract.Intent) {
         when (intent) {
-            is RegisterIntent.EmailChanged -> {
+            is RegisterContract.Intent.EmailChanged -> intent {
                 _state.update { it.copy(email = intent.email, error = null) }
             }
-            is RegisterIntent.PasswordChanged -> {
+
+            is RegisterContract.Intent.PasswordChanged -> intent {
                 _state.update { it.copy(password = intent.password, error = null) }
             }
-            is RegisterIntent.ConfirmPasswordChanged -> {
+
+            is RegisterContract.Intent.ConfirmPasswordChanged -> intent {
                 _state.update { it.copy(confirmPassword = intent.password, error = null) }
             }
-            is RegisterIntent.RegisterClicked -> register()
-            is RegisterIntent.BackClicked -> navigateBack()
+
+            is RegisterContract.Intent.RegisterClicked -> register()
+            is RegisterContract.Intent.BackClicked -> navigateBack()
         }
     }
-    
+
     private fun register() = intent {
         val currentState = _state.value
 
@@ -80,6 +71,6 @@ class RegisterViewModel(
     }
     
     private fun navigateBack() = intent {
-        emitNavAction(NavAction.NavigateUp)
+        _effect.send(RegisterContract.Effect.NavigateUp)
     }
 }

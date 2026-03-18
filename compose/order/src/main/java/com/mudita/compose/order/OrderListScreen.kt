@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,34 +30,39 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mudita.compose.navigation.NavActionsEffect
 import com.mudita.core.domain.model.Order
-import com.mudita.features.order.presentation.OrderListIntent
+import com.mudita.features.order.presentation.OrderListContract.Effect
+import com.mudita.features.order.presentation.OrderListContract.Intent
 import com.mudita.features.order.presentation.OrderListState
 import com.mudita.features.order.presentation.OrderListViewModel
-import com.mudita.libraries.navigation.AppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderListScreen(
-    navigator: AppNavigator,
-    viewModel: OrderListViewModel = koinViewModel()
+    viewModel: OrderListViewModel = koinViewModel(),
+    onNavigateToOrderDetail: (orderId: String) -> Unit = {},
+    onNavigateToAddOrder: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    
-    NavActionsEffect(
-        actions = viewModel.navActions,
-        navigator = navigator
-    )
-    
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is Effect.NavigateToOrderDetail -> onNavigateToOrderDetail(effect.orderId)
+                is Effect.NavigateToAddOrder -> onNavigateToAddOrder()
+                is Effect.ShowError -> TODO()
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Zamówienia") },
                 actions = {
                     TextButton(
-                        onClick = { viewModel.handleIntent(OrderListIntent.OnLogout) }
+                        onClick = { viewModel.handleIntent(Intent.OnLogout) }
                     ) {
                         Text("Wyloguj")
                     }
@@ -65,7 +71,7 @@ fun OrderListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { viewModel.handleIntent(OrderListIntent.OnAddOrderClick) }
+                onClick = { viewModel.handleIntent(Intent.OnAddOrderClick) }
             ) {
                 Icon(
                     painter = painterResource(android.R.drawable.ic_input_add),
@@ -76,8 +82,8 @@ fun OrderListScreen(
     ) { paddingValues ->
         OrderListContent(
             state = state,
-            onOrderClick = { orderId -> 
-                viewModel.handleIntent(OrderListIntent.OnOrderClick(orderId))
+            onOrderClick = { orderId ->
+                viewModel.handleIntent(Intent.OnOrderClick(orderId))
             },
             modifier = Modifier.padding(paddingValues)
         )
