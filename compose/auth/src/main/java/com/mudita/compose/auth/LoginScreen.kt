@@ -13,6 +13,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mudita.features.auth.presentation.LoginContract.Effect
 import com.mudita.features.auth.presentation.LoginContract.Intent
 import com.mudita.features.auth.presentation.LoginViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -23,11 +25,9 @@ fun LoginScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                Effect.NavigateToRegister -> onNavigateToDetails()
-            }
+    EffectHandler(viewModel.effect){ effect ->
+        when (effect) {
+            Effect.NavigateToRegister -> onNavigateToDetails()
         }
     }
 
@@ -106,5 +106,12 @@ fun LoginScreen(
                 Text("Nie masz konta? Zarejestruj się")
             }
         }
+    }
+}
+
+@Composable
+private fun <T> EffectHandler(effectsSource: Flow<T>, onEffect: FlowCollector<T>) {
+    LaunchedEffect(Unit) {
+        effectsSource.collect (onEffect)
     }
 }
