@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons.Default
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -25,44 +24,47 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mudita.core.domain.model.Order
-import com.mudita.features.order.presentation.OrderDetailIntent
+import com.mudita.features.order.presentation.OrderDetailContract.Effect
+import com.mudita.features.order.presentation.OrderDetailContract.Intent
 import com.mudita.features.order.presentation.OrderDetailState
 import com.mudita.features.order.presentation.OrderDetailViewModel
-import com.mudita.libraries.navigation.AppNavigator
-import com.mudita.compose.navigation.NavActionsEffect
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderDetailScreen(
     orderId: String,
-    navigator: AppNavigator,
-    viewModel: OrderDetailViewModel = koinViewModel()
+    viewModel: OrderDetailViewModel = koinViewModel(),
+    onNavigateBack: () -> Unit = {},
+    onNavigateToEditOrder: (orderId: String) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    // Observe navigation actions from ViewModel - reusable!
-    NavActionsEffect(
-        actions = viewModel.navActions,
-        navigator = navigator
-    )
-    
     LaunchedEffect(orderId) {
-        viewModel.handleIntent(OrderDetailIntent.LoadOrder(orderId))
+        viewModel.handleIntent(Intent.LoadOrder(orderId))
     }
-    
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is Effect.NavigateBack -> onNavigateBack()
+                is Effect.NavigateToEdit -> onNavigateToEditOrder(effect.orderId)
+                is Effect.ShowError -> TODO()
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Szczegóły zamówienia") },
                 navigationIcon = {
                     IconButton(
-                        onClick = { viewModel.handleIntent(OrderDetailIntent.OnBackClick) }
+                        onClick = { viewModel.handleIntent(Intent.OnBackClick) }
                     ) {
                         Icon(
                             imageVector = Default.ArrowBack,
@@ -75,7 +77,7 @@ fun OrderDetailScreen(
     ) { paddingValues ->
         OrderDetailContent(
             state = state,
-            onEditClick = { viewModel.handleIntent(OrderDetailIntent.OnEditClick) },
+            onEditClick = { orderId -> viewModel.handleIntent(Intent.OnEditClick(orderId)) },
             modifier = Modifier.padding(paddingValues)
         )
     }
@@ -84,7 +86,7 @@ fun OrderDetailScreen(
 @Composable
 fun OrderDetailContent(
     state: OrderDetailState,
-    onEditClick: () -> Unit,
+    onEditClick: (orderId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -120,7 +122,7 @@ fun OrderDetailContent(
 @Composable
 fun OrderDetailItem(
     order: Order?,
-    onEditClick: () -> Unit,
+    onEditClick: (orderId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (order == null) return
@@ -174,7 +176,7 @@ fun OrderDetailItem(
         }
         
         Button(
-            onClick = onEditClick,
+            onClick = { onEditClick(order.id) },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Edytuj zamówienie")

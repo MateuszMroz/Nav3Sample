@@ -1,7 +1,6 @@
 package com.mudita.nav3sample.di
 
 import com.mudita.core.domain.constants.AppConfig
-import com.mudita.libraries.navigation.NavActionsEmitter
 import com.mudita.nav3sample.constants.AppConfigImpl
 import com.mudita.nav3sample.presentation.MainViewModel
 import org.koin.core.module.dsl.viewModel

@@ -3,16 +3,17 @@ package com.mudita.features.order.presentation
 import androidx.lifecycle.ViewModel
 import com.mudita.core.domain.usecase.GetOrdersUseCase
 import com.mudita.features.auth.domain.AuthRepository
-import com.mudita.features.order.navigation.Order.Add
-import com.mudita.features.order.navigation.Order.Detail
-import com.mudita.libraries.navigation.NavAction.NavigateTo
-import com.mudita.libraries.navigation.NavActionsEmitter
+import com.mudita.features.order.presentation.OrderListContract.Effect
+import com.mudita.features.order.presentation.OrderListContract.Intent
 import com.mudita.libraries.viewmodel.intent
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 
 /**
@@ -24,21 +25,24 @@ import kotlinx.coroutines.flow.update
 class OrderListViewModel(
     private val getOrdersUseCase: GetOrdersUseCase,
     private val authRepository: AuthRepository
-) : ViewModel(), NavActionsEmitter by NavActionsEmitter() {
+) : ViewModel() {
 
-    private val _state = MutableStateFlow(OrderListContract.initialState())
+    private val _state = MutableStateFlow(OrderListState())
     val state: StateFlow<OrderListState> = _state.asStateFlow()
 
+    private val _effect = Channel<Effect>(Channel.BUFFERED)
+    val effect: Flow<Effect> = _effect.receiveAsFlow()
+
     init {
-        handleIntent(OrderListIntent.LoadOrders)
+        handleIntent(Intent.LoadOrders)
     }
 
-    fun handleIntent(intent: OrderListIntent) {
+    fun handleIntent(intent: Intent) {
         when (intent) {
-            is OrderListIntent.LoadOrders -> loadOrders()
-            is OrderListIntent.OnOrderClick -> onOrderClick(intent.orderId)
-            is OrderListIntent.OnAddOrderClick -> onAddOrderClick()
-            is OrderListIntent.OnLogout -> onLogout()
+            is Intent.LoadOrders -> loadOrders()
+            is Intent.OnOrderClick -> onOrderClick(intent.orderId)
+            is Intent.OnAddOrderClick -> onAddOrderClick()
+            is Intent.OnLogout -> onLogout()
         }
     }
 
@@ -67,11 +71,11 @@ class OrderListViewModel(
     }
 
     private fun onOrderClick(orderId: String) = intent {
-        emitNavAction(NavigateTo(Detail(orderId)))
+        _effect.send(Effect.NavigateToOrderDetail(orderId))
     }
 
     private fun onAddOrderClick() = intent {
-        emitNavAction(NavigateTo(Add))
+        _effect.send(Effect.NavigateToAddOrder)
     }
 
     private fun onLogout() = intent {

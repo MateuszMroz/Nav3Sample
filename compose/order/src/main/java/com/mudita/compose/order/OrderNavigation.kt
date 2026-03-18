@@ -8,9 +8,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
-import com.mudita.compose.navigation.rememberNavigator
-import com.mudita.compose.order.OrderDetailScreen
-import com.mudita.compose.order.OrderListScreen
+import com.mudita.compose.navigation.navigateTo
+import com.mudita.compose.navigation.navigateUp
+import com.mudita.compose.navigation.rememberNavBackStack
 import com.mudita.features.order.navigation.Order
 
 /**
@@ -21,26 +21,30 @@ import com.mudita.features.order.navigation.Order
 fun OrderNavigation(
     modifier: Modifier = Modifier
 ) {
-    val orderNavigator = rememberNavigator(startDestination = Order.List)
-    
+    val backStack = rememberNavBackStack<Order>(Order.List)
+
     NavDisplay(
-        backStack = orderNavigator.backStack,
+        backStack = backStack,
         modifier = modifier,
-        onBack = { orderNavigator.navigateUp() },
+        onBack = { backStack.navigateUp() },
         entryProvider = entryProvider {
             entry<Order.List> {
                 OrderListScreen(
-                    navigator = orderNavigator
+                    onNavigateToOrderDetail = { orderId ->
+                        backStack.navigateTo(Order.Detail(orderId))
+                    },
+                    onNavigateToAddOrder = { backStack.navigateTo(Order.Add) }
                 )
             }
-            
+
             entry<Order.Detail> { route ->
                 OrderDetailScreen(
                     orderId = route.orderId,
-                    navigator = orderNavigator
+                    onNavigateBack = { backStack.navigateUp() },
+                    onNavigateToEditOrder = { TODO("No route") },
                 )
             }
-            
+
             entry<Order.Add> {
                 Column(
                     modifier = Modifier.fillMaxSize(),

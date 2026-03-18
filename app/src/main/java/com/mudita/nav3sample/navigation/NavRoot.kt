@@ -8,16 +8,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.mudita.compose.auth.AuthNavigation
-import com.mudita.compose.navigation.rememberNavigator
+import com.mudita.compose.navigation.clearWith
+import com.mudita.compose.navigation.navigateUp
+import com.mudita.compose.navigation.rememberNavBackStack
 import com.mudita.compose.order.OrderNavigation
-import com.mudita.features.auth.navigation.Auth
-import com.mudita.features.order.navigation.Order
 import com.mudita.nav3sample.presentation.MainViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Root navigation - manages top-level flow switching.
- * 
+ *
  * Uses first screen of each flow as entry point.
  * Internal flow structure is managed by nested graphs.
  */
@@ -26,36 +26,27 @@ fun NavRoot(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel = koinViewModel()
 ) {
-    val isAuthenticated by viewModel.isAuthenticated.collectAsStateWithLifecycle()
-    
-    // Use first screen of each flow as entry point
-    val startDestination = if (isAuthenticated) Order.List else Auth.Login
-    val rootNavigator = rememberNavigator(startDestination = startDestination)
+    val backStack = rememberNavBackStack<RootRoutes>(RootRoutes.Auth)
 
+    val isAuthenticated by viewModel.isAuthenticated.collectAsStateWithLifecycle()
     LaunchedEffect(isAuthenticated) {
         if (isAuthenticated) {
-            if (rootNavigator.backStack.lastOrNull() !is Order.List) {
-                rootNavigator.backStack.clear()
-                rootNavigator.backStack.add(Order.List)
-            }
+            backStack.clearWith(RootRoutes.List)
         } else {
-            if (rootNavigator.backStack.lastOrNull() !is Auth.Login) {
-                rootNavigator.backStack.clear()
-                rootNavigator.backStack.add(Auth.Login)
-            }
+            backStack.clearWith(RootRoutes.Auth)
         }
     }
-    
+
     NavDisplay(
-        backStack = rootNavigator.backStack,
+        backStack = backStack,
         modifier = modifier,
-        onBack = { rootNavigator.navigateUp() },
+        onBack = { backStack.navigateUp() },
         entryProvider = entryProvider {
-            entry<Auth.Login> {
+            entry<RootRoutes.Auth> {
                 AuthNavigation()
             }
 
-            entry<Order.List> {
+            entry<RootRoutes.List> {
                 OrderNavigation()
             }
         }

@@ -1,54 +1,68 @@
 package com.mudita.compose.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.serialization.NavBackStackSerializer
+import androidx.navigation3.runtime.serialization.NavKeySerializer
 import com.mudita.core.navigation.NavRoute
-import com.mudita.libraries.navigation.AppNavigator
-import com.mudita.libraries.navigation.Route
+
+
 
 /**
- * Navigator implementation using Navigation 3's rememberNavBackStack.
- * Lives in Compose layer - not in DI.
- */
-@Stable
-class Navigator(
-    val backStack: NavBackStack<NavKey>
-) : AppNavigator {
+ * Proposal of Convenience method to build navigation Root
+ * It's example of usage is in [AuthNavigation] file
+ * */
+@Composable
+fun <RouteGroup : NavRoute> NavigableContent(
+    start: RouteGroup,
+    content: @Composable NavBackStack<RouteGroup>.() -> Unit
+) {
+    val backStack: NavBackStack<RouteGroup> = rememberNavBackStack<RouteGroup>(start)
+    backStack.content()
+}
 
-    override fun navigateTo(route: Route) {
-        require(route is NavKey) { "Route must implement NavKey (use NavRoute)" }
-        backStack.add(route)
+
+/**
+ * This is exact copy of [androidx.navigation3.runtime.rememberNavBackStack] but without
+ * missing generic [RouteGroup] type
+ * */
+@Composable
+fun <RouteGroup : NavRoute> rememberNavBackStack(vararg elements: RouteGroup): NavBackStack<RouteGroup> {
+    return rememberSerializable(
+        serializer = NavBackStackSerializer(elementSerializer = NavKeySerializer())
+    ) {
+        NavBackStack(*elements)
     }
+}
 
-    override fun navigateUp() {
-        if (backStack.size > 1) {
-            backStack.removeLastOrNull()
-        }
+fun <RouteGroup : NavRoute> NavBackStack<RouteGroup>.navigateTo(route: RouteGroup): Boolean {
+    return add(route)
+}
+
+fun <RouteGroup : NavRoute> NavBackStack<RouteGroup>.navigateUp() {
+    if (size > 1) {
+        removeLastOrNull()
     }
+}
 
-    override fun popBackTo(route: Route, inclusive: Boolean) {
-        require(route is NavKey) { "Route must implement NavKey (use NavRoute)" }
-        
-        val index = backStack.indexOfLast { it == route }
-        if (index != -1) {
-            val removeFrom = if (inclusive) index else index + 1
-            while (backStack.size > removeFrom) {
-                backStack.removeLastOrNull()
-            }
+fun <RouteGroup : NavRoute> NavBackStack<RouteGroup>.popBackTo(
+    route: RouteGroup,
+    inclusive: Boolean
+) {
+    val index = indexOfLast { it == route }
+    if (index != -1) {
+        val removeFrom = if (inclusive) index else index + 1
+        while (size > removeFrom) {
+            removeLastOrNull()
         }
     }
 }
 
-/**
- * Creates Navigator with persistent back stack.
- * Survives configuration changes and handles system back.
- */
-@Composable
-fun rememberNavigator(startDestination: NavRoute): Navigator {
-    val backStack = rememberNavBackStack(startDestination)
-    return remember { Navigator(backStack) }
+fun <RouteGroup : NavRoute> NavBackStack<RouteGroup>.clearWith(route: RouteGroup) {
+    val oldRoute = lastOrNull()
+    val routeToAdd = if (oldRoute == route) oldRoute else route
+
+    clear()
+    add(routeToAdd)
 }

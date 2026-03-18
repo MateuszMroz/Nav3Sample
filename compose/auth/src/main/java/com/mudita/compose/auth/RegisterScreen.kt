@@ -12,33 +12,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mudita.compose.navigation.NavActionsEffect
-import com.mudita.features.auth.domain.AuthManager
-import com.mudita.features.auth.presentation.RegisterIntent
+import com.mudita.features.auth.presentation.RegisterContract.Effect
+import com.mudita.features.auth.presentation.RegisterContract.Intent
 import com.mudita.features.auth.presentation.RegisterViewModel
-import com.mudita.libraries.navigation.AppNavigator
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    navigator: AppNavigator,
-    viewModel: RegisterViewModel = koinViewModel()
+    viewModel: RegisterViewModel = koinViewModel(),
+    onNavigateUp: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    
-    NavActionsEffect(
-        actions = viewModel.navActions,
-        navigator = navigator
-    )
-    
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                Effect.NavigateUp -> onNavigateUp()
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Rejestracja") },
                 navigationIcon = {
-                    IconButton(onClick = { viewModel.handleIntent(RegisterIntent.BackClicked) }) {
+                    IconButton(onClick = { viewModel.handleIntent(Intent.BackClicked) }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Powrót")
                     }
                 }
@@ -61,7 +61,7 @@ fun RegisterScreen(
             
             OutlinedTextField(
                 value = state.email,
-                onValueChange = { viewModel.handleIntent(RegisterIntent.EmailChanged(it)) },
+                onValueChange = { viewModel.handleIntent(Intent.EmailChanged(it)) },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -71,7 +71,7 @@ fun RegisterScreen(
             
             OutlinedTextField(
                 value = state.password,
-                onValueChange = { viewModel.handleIntent(RegisterIntent.PasswordChanged(it)) },
+                onValueChange = { viewModel.handleIntent(Intent.PasswordChanged(it)) },
                 label = { Text("Hasło") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -82,7 +82,7 @@ fun RegisterScreen(
             
             OutlinedTextField(
                 value = state.confirmPassword,
-                onValueChange = { viewModel.handleIntent(RegisterIntent.ConfirmPasswordChanged(it)) },
+                onValueChange = { viewModel.handleIntent(Intent.ConfirmPasswordChanged(it)) },
                 label = { Text("Potwierdź hasło") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -101,7 +101,7 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(24.dp))
             
             Button(
-                onClick = { viewModel.handleIntent(RegisterIntent.RegisterClicked) },
+                onClick = { viewModel.handleIntent(Intent.RegisterClicked) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isLoading
             ) {
