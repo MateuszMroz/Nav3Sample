@@ -12,19 +12,20 @@ android {
         minSdk = 28
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
     
+
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
+    }
+    kotlin {
+        jvmToolchain(17)
     }
 }
 
 dependencies {
     implementation(project(":core:navigation"))
-    
+    implementation(project(":libraries:viewmodel"))
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")

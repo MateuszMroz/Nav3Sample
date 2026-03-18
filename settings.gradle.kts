@@ -21,6 +21,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "Nav3Sample"
 include(":app")
+include(":libraries:viewmodel")
 include(":libraries:navigation")
 include(":core:navigation")
 include(":core:domain")
